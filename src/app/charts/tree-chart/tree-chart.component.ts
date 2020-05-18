@@ -38,6 +38,7 @@ _treeData =   {
  	"level": "red",
  	"male": 51,
  	"female": 24,
+               "id": 0,
  	"children": [{
  			"name": "Operation",
  			"value": 40,
@@ -45,6 +46,7 @@ _treeData =   {
  			"level": "green",
  			"male": 23,
  			"female": 17,
+               "id": 0,
  			"children": [{
  					"name": "Top Management",
  					"value": 3,
@@ -52,13 +54,15 @@ _treeData =   {
  					"level": "red",
  					"male": 3,
  					"female": 0,
+               "id": 0,
  					"children": [{
  							"name": "Operation Manager",
  							"value": 1,
  							"type": "steelblue",
  							"level": "orange",
  							"male": 1,
- 							"female": 0
+ 							"female": 0,
+               "id": 0
  						},
  						{
  							"name": "Account Strategist",
@@ -66,7 +70,8 @@ _treeData =   {
  							"type": "steelblue",
  							"level": "red",
  							"male": 1,
- 							"female": 0
+ 							"female": 0,
+               "id": 0
  						},
 
  					]
@@ -78,6 +83,7 @@ _treeData =   {
  					"level": "green",
  					"male": 10,
  					"female": 13,
+               "id": 0,
  					"children": [{
  							"name": "Analyst",
  							"value": 10,
@@ -85,6 +91,7 @@ _treeData =   {
  							"level": "orange",
  							"male": 7,
  							"female": 3,
+               "id": 0,
  							"children": [{
  									"name": "Top Management",
  									"value": 2,
@@ -92,13 +99,15 @@ _treeData =   {
  									"level": "red",
  									"male": 2,
  									"female": 0,
+               "id": 0,
  									"children": [{
  											"name": "Director",
  											"value": 1,
  											"type": "black",
  											"level": "red",
  											"male": 1,
- 											"female": 0
+ 											"female": 0,
+               "id": 0
  										},
  										{
  											"name": "HR Manager",
@@ -106,7 +115,8 @@ _treeData =   {
  											"type": "black",
  											"level": "red",
  											"male": 1,
- 											"female": 0
+ 											"female": 0,
+               "id": 0
  										}
  									]
  								},
@@ -123,7 +133,8 @@ _treeData =   {
  										"type": "black",
  										"level": "red",
  										"male": 0,
- 										"female": 1
+ 										"female": 1,
+               "id": 0
  									}]
  								}
  							]
@@ -135,7 +146,8 @@ _treeData =   {
  							"type": "steelblue",
  							"level": "red",
  							"male": 0,
- 							"female": 5
+ 							"female": 5,
+               "id": 0
  						},
 
  					]
@@ -163,7 +175,8 @@ _treeData =   {
  							"type": "grey",
  							"level": "red",
  							"male": 1,
- 							"female": 0
+ 							"female": 0,
+               "id": 0
  						},
  						{
  							"name": "Product Manager",
@@ -171,7 +184,8 @@ _treeData =   {
  							"type": "grey",
  							"level": "red",
  							"male": 1,
- 							"female": 0
+ 							"female": 0,
+               "id": 0
  						},
 
  					]
@@ -189,7 +203,8 @@ _treeData =   {
  							"type": "grey",
  							"level": "red",
  							"male": 1,
- 							"female": 0
+ 							"female": 0,
+               "id": 0
  						},
  						{
  							"name": "Support Engineer",
@@ -197,7 +212,8 @@ _treeData =   {
  							"type": "grey",
  							"level": "red",
  							"male": 1,
- 							"female": 0
+ 							"female": 0,
+               "id": 0
  						},
 
  					]
@@ -224,8 +240,8 @@ this.treemap = d3.tree()
 //  assigns the data to a hierarchy using parent-child relationships
 this.root = d3.hierarchy(this._treeData, (d) => { return d.children; });
 this.root = this.treemap(this.root) ;
-this.root.x0 = this.height /2;
-this.root.y0 = 0;
+ this.root.x0 = this.height /2;
+ this.root.y0 = 0;
 
 // maps the node data to the tree layout
 
@@ -247,15 +263,12 @@ this.link = this.g.selectAll(".link")
     .data( this.root.descendants().slice(1))
   .enter().append("path")
     .attr("class", "link")
-       .style("stroke", d => {
-                  return d.data.type === "black" ? "red" : "green"
-                  })
-    .attr("d", function(d) {
-       return "M" + d.x + "," + d.y
-         + "C" + d.x + "," + (d.y + d.parent.y) / 2
-         + " " + d.parent.x + "," +  (d.y + d.parent.y) / 2
-         + " " + d.parent.x + "," + d.parent.y;
-       });
+      //  .style("stroke", d => {
+      //             return d.data.type === "black" ? "blue" : "steelblue"
+      //             })
+    .attr("d", d => this.diagonal(d)
+       );
+       
 
 // adds each node as a group
 this.nodes = this.g.selectAll(".node")
@@ -265,26 +278,28 @@ this.nodes = this.g.selectAll(".node")
       return "node" + 
         (d.children ? " node--internal" : " node--leaf"); })
     .attr("transform", function(d) { 
-      return "translate(" + d.x + "," + d.y + ")"; });
+      return "translate(" + d.y + "," + d.x + ")"; });
 
  
  
 // adds the circle to the node
 this.nodes.append("circle")
   .attr("r", 10)
-   .style("stroke", d => {
-                  return d.data.type === "black" ? "red" : "green"
-                  })
+  //  .style("stroke", d => {
+  //                 return d.data.type === "black" ? "steelblue" : "blue"
+  //                 })
   ;
 
 // adds the text to the node
 this.nodes.append("text")
   .attr("dy", ".35em")
-  .attr("y", function(d) { return d.children ? 20 : 20; })
-  
+  .attr("y", function(d) { return d.children ? -20 : 20; })
+   .style("stroke", d => {
+                   return  "black"; })
   .style("text-anchor", "middle")
   .text(function(d) { return d.data.name; });
    console.log(this.root); 
+ 
   this.root.children.forEach(c => this.collapse(c)); 
    
   this.update(this.root);
@@ -302,177 +317,154 @@ this.nodes.append("text")
       }
     this.update(d);
   }
-
+ 
 update(source) {
 
-const treeRoot = d3.hierarchy(this.root);
-var _nodes = treeRoot.descendants();
-     var _link = treeRoot.links();
-    
-     console.log('_link');  
- 
-  // Assigns the x and y position for the nodes
-  var treeData = this.treemap(this.root);
- 
-  // Compute the new tree layout.
-  this.nodes = treeData.descendants(),
-      this.link = treeData.descendants().slice(1)
-      .style("stroke", d => {
-                  return d.data.type === "black" ? "red" : "green"
-                  });
-      
-
-  // Normalize for fixed-depth.
-  this.nodes.forEach(function(d){ d.x = d.depth * 100});
-
+this.nodes = this.treemap.nodes(this.root);
+   
+//   // Normalize for fixed-depth.
+   this.nodes.forEach(function(d){ d.x = d.depth * 100});
+  console.log(this.nodes);
   // ****************** Nodes section ***************************
- 
+ // 
   // Update the nodes...
-  var node = this.svg.selectAll('g.node')
-      .data(this.nodes, function(d) {       
-        return d.id || (d.id = ++this.i); });
+  var node = this.svg.selectAll('g.node').data(this.nodes);
+      //.data(this.nodes, d => {             
+      //  return d.id || (d.id = ++this.i); });
 
-  // // Enter any new modes at the parent's previous position.
+  // // // Enter any new modes at the parent's previous position.
    var nodeEnter = node.enter().append('g')
       .attr('class', 'node')
-      .attr("transform", function(d) {
-        return "translate(" + source.x0 + "," + source.y0 + ")";
+      .attr("transform", d => {
+        return "translate(" + source.y0 + "," + source.x0 + ")";
     })
-    .on('click', this.click);
+    .on('click', d => this.toggle(d));
 
-  // // // Add Circle for the nodes
+  // // // // Add Circle for the nodes
   nodeEnter.append("circle")
-                   .attr("r", 10)
-                      .attr("stroke", function (d)
-                      { return d.children || d._children ?
-                      "steelblue" : "#00c13f"; })
-                      .style("fill", function (d)
-                      { return d.children || d._children ?
-                      "lightsteelblue" : "#fff"; });
+                   .attr("r", 1e-6)
+      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
-  // // Add labels for the nodes
+  // // // Add labels for the nodes
   nodeEnter.append("text")
-                      .attr("y", function (d) {
-                          return d.children || d._children ? -18 : 18;
-                      })
-                      .attr("dy", ".35em")
-                      .attr("text-anchor", "middle")
-                      .text(function (d) { return d.name; })
-                      .style("fill-opacity", 1e-6);
+                     .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+      .attr("dy", ".35em")
+      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+      .text(function(d) { return d.name; })
+      .style("fill-opacity", 1e-6);
 
-  // // UPDATE
-   var nodeUpdate = nodeEnter.merge(node);
+  // // // UPDATE
+  var nodeUpdate = node.transition()
+      .duration(this.duration)
+      .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
-  // // // Transition to the proper position for the node
-  nodeUpdate.transition()
-    .duration(this.duration)
-    .attr("transform", function(d) { 
-        return "translate(" + d.x + "," + d.y + ")";
-     });
+  // // // // Transition to the proper position for the node
+  nodeUpdate.select("circle")
+      .attr("r", 4.5)
+      .style("fill", function(d) {
+            if (d.class === "found") {
+                return "#ff4136"; //red
+            } else if (d._children) {
+                return "lightsteelblue";
+            } else {
+                return "#fff";
+            }
+        })
+        .style("stroke", function(d) {
+            if (d.class === "found") {
+                return "#ff4136"; //red
+            }
+        });
 
-  // // Update the node attributes and style
-  // nodeUpdate.select('circle.node')
-  //   .attr('r', 10)
-  //   .style("fill", function(d) {
-  //       return d._children ? "blue" : "#fff";
-  //   })
-  //   .attr('cursor', 'pointer');
+  nodeUpdate.select("text")
+      .style("fill-opacity", 1);
 
+   // Transition exiting nodes to the parent's new position.
+  var nodeExit = node.exit().transition()
+      .duration(this.duration)
+      .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+      .remove();
 
-  // // // Remove any exiting nodes
-  // var nodeExit = node.exit().transition()
-  //     .duration(this.duration)
-  //     .attr("transform", function(d) {
-  //         return "translate(" + source.x + "," + source.y + ")";
-  //     })
-  //     .remove();
+  nodeExit.select("circle")
+      .attr("r", 1e-6);
 
-  // // // On exit reduce the node circles size to 0
-  // nodeExit.select('circle')
-  //   .attr('r', 1e-6);
+  nodeExit.select("text")
+      .style("fill-opacity", 1e-6);
 
-  // // // On exit reduce the opacity of text labels
-  // nodeExit.select('text')
-  //   .style('fill-opacity', 1e-6);
+  // Update the links…
+  var link = this.svg.selectAll("path.link")
+      .data(this.link, function(d) { return d.target.id; });
 
-  // // // ****************** links section ***************************
+  // Enter any new links at the parent's previous position.
+  link.enter().insert("path", "g")
+      .attr("class", "link")
+      .attr("d", function(d) {
+        var o = {x: source.x0, y: source.y0};
+        return this.diagonal(o);
+      });
 
-  // // // Update the links...
-  // var link = this.svg.selectAll('path.link')
-  //     .data(this.link, function(d) { return d.id; })
-  // 		;
+  // Transition links to their new position.
+  link.transition()
+      .duration(this.duration)
+      .attr("d", this.diagonal)
+      .style("stroke", function(d) {
+            if (d.target.class === "found") {
+                return "#ff4136";
+            }
+        });
 
-  // // // Enter any new links at the parent's previous position.
-  // var linkEnter = link.enter().insert('path', "g")
-  //     .attr("class", "link")
-  //     .attr('d', function(d){
-  //       var o = {x: source.x0, y: source.y0}
-  //       return this.diagonal(o, o)
-  //     })
-  // 		;
+  // Transition exiting nodes to the parent's new position.
+  link.exit().transition()
+      .duration(this.duration)
+      .attr("d", function(d) {
+        var o = {x: source.x, y: source.y};
+        return this.diagonal(o);
+      })
+      .remove();
 
-  // // UPDATE
-  // var linkUpdate = linkEnter.merge(link);
-
-  // // Transition back to the parent element position
-  // linkUpdate.transition()
-  //     .duration(this.duration)
-  //     .attr('d', function(d){ return this.diagonal(d, d.parent) });
-
-  // // Remove any exiting links
-  // var linkExit = link.exit().transition()
-  //     .duration(this.duration)
-  //     .attr('d', function(d) {
-  //       var o = {x: source.x, y: source.y}
-  //       return this.diagonal(o, o)
-  //     })  	
-  //     .remove();
-
-  // // Store the old positions for transition.
-  // this.nodes.forEach(function(d){
-  //     d.x0 = d.x;
-  //     d.y0 = d.y;
-  
-  // });
-   
+  // Stash the old positions for transition.
+  this.nodes.forEach(function(d) {
+    d.x0 = d.x;
+    d.y0 = d.y;
+  });
 
 }  // end Update
 
 
 
-clearAll = (d) => {
+clearAll(d){
     d.class = "";
     if (d.children)
-        d.children.forEach(this.clearAll);
+        d.children.forEach(d => this.clearAll(d));
     else if (d._children)
-        d._children.forEach(this.clearAll);
+        d._children.forEach(d => this.clearAll(d));
 }
 
- collapse = (d) => {
+ collapse(d) {
     if (d.children) {
       d._children = d.children;
-      d._children.forEach(this.collapse);
+      d._children.forEach(d => this.collapse(d));
       d.children = null;
     }
   }
 
-collapseAllNotFound = (d) => {
+collapseAllNotFound(d) {
     if (d.children) {
     	if (d.class !== "found") {
         	d._children = d.children;
-        	d._children.forEach(this.collapseAllNotFound);
+        	d._children.forEach(d => this.collapseAllNotFound(d));
         	d.children = null;
 	} else 
-        	d.children.forEach(this.collapseAllNotFound);
+        	d.children.forEach(d => this.collapseAllNotFound(d));
     }
 }
-expandAll = (d) => {
+expandAll(d)  {
     if (d._children) {
         d.children = d._children;
-        d.children.forEach(this.expandAll);
+        d.children.forEach(d => this.expandAll(d));
         d._children = null;
     } else if (d.children)
-        d.children.forEach(this.expandAll);
+        d.children.forEach(d => this.expandAll(d));
 }
 
 toggle = (d) => {
@@ -490,11 +482,22 @@ toggle = (d) => {
 
 
 
-diagonal(s, d) {
-      const path = `M ${s.y} ${s.x}
-                  C ${(s.y + d.y) / 2} ${s.x},
-                    ${(s.y + d.y) / 2} ${d.x},
-                    ${d.y} ${d.x}`;
+diagonal(d) {
+      const path = 
+      "M" + d.y + "," + d.x 
+         + "C" + (d.y + d.parent.y) / 2 + "," + d.x 
+         + " " + (d.y + d.parent.y) / 2 + "," +  d.parent.x
+         + " " + d.parent.y + "," + d.parent.x 
+
+//  "M" +  d.x + "," + d.y
+//          + "C" +  d.x + "," +  (d.y + d.parent.y) / 2
+//          + " " + d.parent.x  + "," +  (d.y + d.parent.y) / 2
+//          + " " +  d.parent.x + "," +  d.parent.y
+
+      // `M ${s.y} ${s.x}
+      //             C ${(s.y + d.y) / 2} ${s.x},
+      //               ${(s.y + d.y) / 2} ${d.x},
+      //               ${d.y} ${d.x}`;
 
       return path;
  }
