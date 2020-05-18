@@ -253,8 +253,7 @@ drawOrganizationChart(params) {
   
   this.tree = d3.layout.tree().nodeSize([this.attrs.nodeWidth + 40, this.attrs.nodeHeight]);
    this.diagonal = d3.svg.diagonal()
-    .projection(function(d) {
-      debugger;
+    .projection(function(d) {     
       return [d.x + this.attrs.nodeWidth / 2, d.y + this.attrs.nodeHeight / 2];
     });
 
