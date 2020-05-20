@@ -8,7 +8,11 @@ import * as d3 from 'd3';
   styleUrls: ['./tree-chart.component.css'] 
 })
 export class TreeChartComponent implements OnInit {
+totalNodes = 0;
+maxLabelLength = 0;
+selectedNode = null;
 
+levelWidth;
   svg;
   root;
   duration = 750;
@@ -13231,10 +13235,11 @@ export class TreeChartComponent implements OnInit {
       this.treemap = d3.tree().size([height, width]).nodeSize([ 40, 40]);
 
       this.svg = d3
-        .select('body')
+        .select('#tree')
         .append('svg')
         .attr('width', width + margin.right + margin.left)
         .attr('height', height + margin.top + margin.bottom)
+        .attr("class", "overlay")
         .call(
           d3.zoom().on('zoom', () => {
             this.svg.attr('transform', d3.event.transform);
@@ -13242,7 +13247,7 @@ export class TreeChartComponent implements OnInit {
         )
         .append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-        .attr("viewBox", "0 0 1300 3000")
+        .attr("viewBox", "0 0 900 7")
       .classed("svg-content-responsive", true)
         ;
 
@@ -13263,6 +13268,15 @@ export class TreeChartComponent implements OnInit {
     };
 
     const update = source => {
+       // Compute the new height, function counts total children of root node and sets tree height accordingly.
+        // This prevents the layout looking squashed when new nodes are made visible or looking sparse when nodes are removed
+    // This makes the layout more consistent.
+      this.levelWidth = [1];
+
+      childCount(0,this.root)
+
+      let newHeight = d3.max(this.levelWidth) * 25;
+
       // Assigns the x and y position for the nodes
       // tslint:disable-next-line:no-shadowed-variable
       const treeData = this.treemap(this.root);
@@ -13450,9 +13464,33 @@ export class TreeChartComponent implements OnInit {
 
     };
 
+    const visit = (parent, visitFn, childrenFn) => {
+        if (!parent) return;
+        visitFn(parent);
+        var children = childrenFn(parent);
+        if (children) {
+            var count = children.length;
+            for (var i = 0; i < count; i++) {
+                visit(children[i], visitFn, childrenFn);
+            }
+        }
+    };
+
+    const childCount = (level, n) => {
+
+            if (n.children && n.children.length > 0) {
+                if (this.levelWidth.length <= level + 1) this.levelWidth.push(0);
+
+                this.levelWidth[level + 1] += n.children.length;
+                n.children.forEach(function(d) {
+                    childCount(level + 1, d);
+                });
+            }
+        };
 
     createChart();
     update(this.root);
     centerNode(this.root);
   }
+
 }
